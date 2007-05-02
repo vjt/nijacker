@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 
+require 'rubygems'
 require 'drb/drb'
 require 'facets/core/enumerable/to_h'
 require 'pp'
@@ -10,21 +11,21 @@ def server(id)
   DRbObject.new_with_uri($servers[id])
 end
 
-trap('INT') { exit }
+trap('INT') { puts; exit }
 
 loop do
   begin
     print 'nijacker>> '
-    cmd, srv_id, *ignored = $stdin.readline.split(' ')
+    cmd, srv_id, *args = $stdin.readline.split(' ')
     case cmd.to_sym
-    when :ping
-      puts "resp: " << server(srv_id.to_i).ping
     when :servers
       pp $servers.to_h
     else
-      puts 'command unknown'
+      resp = server(srv_id.to_i).send(cmd.to_sym, *args) || 'nil'
+      puts "resp: #{resp}"
     end
   rescue EOFError
+    puts
     exit
   rescue
     puts "exception: #{$!}"

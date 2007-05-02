@@ -1,0 +1,2 @@
+whois_server: '@@WHOIS_SERVER@@'
+whois_domain: '@@WHOIS_DOMAIN@@'

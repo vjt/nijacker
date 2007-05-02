@@ -45,7 +45,7 @@ task :reconfigure, :roles => :bot do
     raise req_vars.join(' or ') + ' were not passed via environment!'
   end
 
-  config = File.read(File.join('config', 'whois_requester_tmpl.yml'))
+  config = File.read(File.join('config', 'whois_requester.yml.template'))
   config.sub! '@@WHOIS_SERVER@@', ENV['WHOISSERVER']
   config.sub! '@@WHOIS_DOMAIN@@', ENV['DOMAIN']
   put config, "#{release_path}/config/whois_requester.yml"

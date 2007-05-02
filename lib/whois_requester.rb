@@ -9,6 +9,10 @@ class WhoisRequester
     true if domain_status == 'DELETED'
   end
 
+  def ping
+    'PONG'
+  end
+
   def shutdown
     DRb.stop_service
   end

@@ -1,0 +1,2 @@
+listen_on: 'druby://localhost:9797'
+handler: 'whois_requester'

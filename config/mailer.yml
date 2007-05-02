@@ -1,5 +1,0 @@
-sender: 'vjt@openssl.it'
-recipient: 'vjt@localhost'
-fax_number: 0801234567
-password: random
-pdf_tank: 'spool'

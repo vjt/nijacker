@@ -1,0 +1,5 @@
+sender: sender@example.org
+recipient: recipient@example.org
+fax_number: '+390801234567'
+password: your_fax_service_password
+pdf_tank: spool

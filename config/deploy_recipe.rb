@@ -9,6 +9,7 @@
 
 set :repository, 'https://svn.softmedia.info/opensource/nijacker/trunk'
 set :deploy_to, '/tmp/nijacker'
+set :deploy_config, 'config/deploy'
 set :run_server_as, 'nobody'
 role :bot, File.read('config/server.list').scan(/\/\/([\w\d\.]+):/).flatten.uniq
 
@@ -19,11 +20,28 @@ desc <<-DESC
 Upload nijacker
 DESC
 task :deploy, :roles => :bot do
+  check_config
+  check_credentials
   source.checkout self
   reconfigure
   restart
 end
 
+desc <<-DESC
+Check that the deploy configuration is correctly in place
+DESC
+task :check_config, :roles => :bot do
+  required = %w(nijacker whois_requester mailer).map { |c| c + '.yml' }
+  missing = required - Dir['config/deploy/*.yml']
+  unless missing.size.zero?
+    missing = missing.map { |f| " - #{f}" }.join(',')
+    raise "file(s) missing from #{self[:deploy_config]}: #{missing}"
+  end
+end
+
+desc <<-DESC
+Check that we can run commands with sudo on every host
+DESC
 task :check_credentials, :roles => :bot do
   sudo 'uname -a', :as => self[:deploy_user]
 end
@@ -40,16 +58,9 @@ Change configuration (via DOMAIN and WHOISSERVER passed via the environment)
 Invokes a restart.
 DESC
 task :reconfigure, :roles => :bot do
-  req_vars = %w(DOMAIN WHOISSERVER)
-  unless req_vars.all? { |k| ENV.has_key? k }
-    raise req_vars.join(' or ') + ' were not passed via environment!'
+  Dir['config/deploy/*.yml'].each do |conf|
+    put File.read(conf), File.join("#{release_path(releases.last)}", 'config', conf)
   end
-
-  config = File.read(File.join('config', 'whois_requester.yml.template'))
-  config.sub! '@@WHOIS_SERVER@@', ENV['WHOISSERVER']
-  config.sub! '@@WHOIS_DOMAIN@@', ENV['DOMAIN']
-  put config, "#{release_path}/config/whois_requester.yml"
-
   restart
 end
 
@@ -57,17 +68,13 @@ desc <<-DESC
 Restarts nijacker
 DESC
 task :restart, :roles => :bot do
-  def last_release_path
-    File.join self[:deploy_to], 'releases', releases.last
-  end
-
   run <<-CMD
-    cd #{last_release_path};
+    cd #{release_path(releases.last)};
     if [ -r 'log/nijacker.pid' ]; then
       kill -TERM `cat log/nijacker.pid`;
     fi;
   CMD
-  sudo "ruby #{last_release_path}/server.rb", :as => self[:run_server_as]
+  sudo "ruby #{release_path(releases.last)}/server.rb", :as => self[:run_server_as]
 end
 
 # a bug in net-ssh is annoying me, so this is a dirty hack that fixes the 

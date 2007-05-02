@@ -1,2 +1,2 @@
-whois_server: '@@WHOIS_SERVER@@'
-whois_domain: '@@WHOIS_DOMAIN@@'
+whois_server: whois.example.org
+whois_domain: example.net

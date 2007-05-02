@@ -12,9 +12,20 @@ require config['handler']
 uri = config['listen_on'].freeze
 front_object = eval(config['handler'].camelize).new
 
-puts "Listening on #{uri} with a #{front_object.class}"
+Pid = File.join 'log', 'nijacker.pid'
+if pid = fork
+  puts "daemonized [#{pid}]"
+  File.open(Pid, 'w+') do |f|
+    f.write "#{pid}\n"
+  end
+  exit
+end
 
-trap('TERM') { DRb.thread.kill }
+trap('TERM') do
+  File.delete Pid
+  DRb.thread.kill
+end
+
 DRb.start_service uri, front_object
 $SAFE = 1
 

@@ -4,14 +4,18 @@ require 'drb/drb'
 require 'yaml'
 require 'facets/core/string/camelize'
 
-config = YAML.load File.read('config/nijacker.yml')
+conf = ARGV[0] || 'config/nijacker.yml'
+config = YAML.load File.read(conf)
 
 $: << 'lib'
 require config['handler']
-listen_uri = config['listen_on'].freeze
+uri = config['listen_on'].freeze
 front_object = eval(config['handler'].camelize).new
 
-DRb.start_service listen_uri, front_object
+puts "Listening on #{uri} with a #{front_object.class}"
 
+trap('TERM') { DRb.thread.kill }
+DRb.start_service uri, front_object
 $SAFE = 1
+
 DRb.thread.join

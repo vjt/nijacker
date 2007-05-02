@@ -1,2 +1,2 @@
-listen_on: 'druby://localhost:9797'
+listen_on: 'druby://0.0.0.0:9797'
 handler: 'whois_requester'

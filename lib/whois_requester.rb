@@ -17,7 +17,6 @@ class WhoisRequester
     DRb.stop_service
   end
 
-  protected
   def domain_status
     TCPSocket.open(@config['whois_server'], 43) do |sock|
       sock.write @config['whois_domain'] + "\n"

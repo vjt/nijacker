@@ -7,7 +7,7 @@
 #require 'ruby-debug'
 #Debugger.start
 
-set :repository, 'https://svn.softmedia.info/opensource/nijacker/trunk'
+set :repository, 'https://svn.softmedia.info/opensource/nijacker/branches/server'
 set :deploy_to, '/tmp/nijacker'
 set :deploy_config, 'config/deploy'
 set :run_server_as, 'nobody'

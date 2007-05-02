@@ -58,7 +58,7 @@ Restarts nijacker
 DESC
 task :restart, :roles => :bot do
   def last_release_path
-    File.join self[:deploy_to], releases.last
+    File.join self[:deploy_to], 'releases', releases.last
   end
 
   run <<-CMD

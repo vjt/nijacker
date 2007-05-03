@@ -6,7 +6,7 @@ class WhoisRequester
   end
 
   def challenge
-    true if domain_status == 'DELETED'
+    true if %w(DELETED AVAILABLE).include? domain_status 
   end
 
   def ping

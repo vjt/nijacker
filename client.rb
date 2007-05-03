@@ -5,6 +5,14 @@ require 'drb/drb'
 require 'lib/mailer'
 require 'logger'
 require 'benchmark'
+require 'timeout'
+
+# Fight agains active_support's clean_logger.
+if Logger.private_instance_methods.include? 'old_format_message'
+  class Logger
+    alias :format_message :old_format_message
+  end
+end
 
 class Fixnum
   def minutes; self * 60; end
@@ -15,7 +23,9 @@ class Client
   def initialize
     @uri_list = File.read('config/server.list').split($/)
     @holdtime = 60.minutes / @uri_list.size
+
     @log = Logger.new File.join('log', 'client.log')
+    @log.datetime_format = '%Y-%m-%d %H:%M:%S '
     @log.info "configured #{@uri_list.size} servers, holdtime #{@holdtime}s"
 
     trap('USR1') { check }
@@ -69,8 +79,8 @@ class Client
           throw :mission_accomplished
         end
 
-        @log.info "#{Time.now} - still trying (last tried: #{uri})"
-        sleep @holdtime
+        @log.info "still trying (last tried: #{uri})"
+        sleep @holdtime + rand(90)
       end
       sleep 1 # avoid looping when no servers are available
     end

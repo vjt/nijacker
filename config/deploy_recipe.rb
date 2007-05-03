@@ -11,10 +11,11 @@ set :repository, 'https://svn.softmedia.info/opensource/nijacker/branches/server
 set :deploy_to, '/tmp/nijacker'
 set :deploy_config, 'config/deploy'
 set :run_server_as, 'nobody'
-role :bot, File.read('config/server.list').scan(/\/\/([\w\d\.]+):/).flatten.uniq
+role :bot, *File.read('config/server.list').scan(/\/\/([\w\d\.]+):/).flatten.uniq
 
 ssh_options[:username] = 'root' # you should change this
 ssh_options[:host_key] = 'ssh-dss'
+ssh_options[:paranoid] = false
 
 desc <<-DESC
 Upload nijacker
@@ -22,12 +23,17 @@ DESC
 task :deploy, :roles => :bot do
   check_config
   check_credentials
-
-  source.checkout self
-  sudo "chmod 1777 #{release_path(releases.last)}/log"
-
+  install_rubygems
+  check_out_tha_source
   reconfigure
   restart
+end
+
+desc <<-DESC
+Check required rubygems
+DESC
+task :install_rubygems, :roles => :bot do
+  sudo "gem install -y --no-rdoc --no-ri actionmailer facets"
 end
 
 desc <<-DESC
@@ -46,7 +52,15 @@ desc <<-DESC
 Check that we can run commands with sudo on every host
 DESC
 task :check_credentials, :roles => :bot do
-  sudo 'uname -a', :as => self[:deploy_user]
+  run 'uname -a'
+end
+
+desc <<-DESC
+Check out tha fscking source!
+DESC
+task :check_out_tha_source, :roles => :bot do
+  source.checkout self
+  sudo "chmod 1777 #{release_path(releases.last)}/log"
 end
 
 desc <<-DESC

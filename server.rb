@@ -16,20 +16,24 @@ uri = config['listen_on'].freeze
 front_object = eval(config['handler'].camelize).new
 
 Pid = File.join 'log', 'nijacker.pid'
-if pid = fork
-  puts "daemonized [#{pid}]"
-  File.open(Pid, 'w+') do |f|
-    f.write "#{pid}\n"
+pid = fork do
+  [$stdin, $stdout, $stderr].each { |io| io.close }
+
+  trap('HUP') { }
+  trap('TERM') do
+    File.delete Pid
+    DRb.thread.kill
   end
-  exit
+
+  DRb.start_service uri, front_object
+  $SAFE = 1
+
+  DRb.thread.join
 end
 
-trap('TERM') do
-  File.delete Pid
-  DRb.thread.kill
+Process.detach(pid)
+File.open(Pid, 'w+') do |f|
+  f.write "#{pid}\n"
 end
 
-DRb.start_service uri, front_object
-$SAFE = 1
-
-DRb.thread.join
+puts "daemonized [#{pid}]"

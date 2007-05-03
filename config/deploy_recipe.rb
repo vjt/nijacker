@@ -31,9 +31,9 @@ desc <<-DESC
 Check that the deploy configuration is correctly in place
 DESC
 task :check_config, :roles => :bot do
-  required = %w(nijacker whois_requester mailer).map { |c| c + '.yml' }
-  missing = required - Dir['config/deploy/*.yml']
-  unless missing.size.zero?
+  required = %w(nijacker whois_requester).map { |c| c + '.yml' }
+  missing = required - Dir['config/deploy/*.yml'].map { |c| File.basename(c) }
+  unless missing.empty?
     missing = missing.map { |f| " - #{f}" }.join(',')
     raise "file(s) missing from #{self[:deploy_config]}: #{missing}"
   end

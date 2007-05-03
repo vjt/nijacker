@@ -58,7 +58,7 @@ desc <<-DESC
 Check out tha fscking source!
 DESC
 task :check_out_tha_source, :roles => :bot do
-  set :rel_to_stop, releases.last
+  set :rel_to_stop, releases.last rescue nil
 
   source.checkout self
   sudo "chmod 1777 #{release_path(releases.last)}/log"

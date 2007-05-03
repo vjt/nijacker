@@ -14,7 +14,7 @@ end
 class Client
   def initialize
     @uri_list = File.read('config/server.list').split($/)
-    @holdtime = 30.minutes / @uri_list.size
+    @holdtime = 60.minutes / @uri_list.size
     @log = Logger.new File.join('log', 'client.log')
     @log.info "configured #{@uri_list.size} servers, holdtime #{@holdtime}s"
 
@@ -30,21 +30,20 @@ class Client
       try_every_server_in_list
     end
 
-    @log.info "success!"
+    fax_thread = Thread.new { deliver_fax }
 
     each_server do |server, uri|
       @log.info "shutting down #{uri}" 
       server.shutdown
     end
 
-    @log.info 'delivering FAX...'
-    Mailer.deliver_fax
-
-    @log.close
-
   rescue StandardError => error
     @log.error "unhandled exception: #{error}"
+
   ensure
+    fax_thread.join
+    @log.info "SUCCESS!"
+    @log.close
     exit
   end
 
@@ -69,10 +68,11 @@ class Client
     loop do
       each_server do |server, uri|
         if server.challenge
+          @log.info 'domain is available!'
           throw :mission_accomplished
         end
 
-        puts "[#{Time.now}] still trying (last tried: #{uri})"
+        @log.info "still trying (last tried: #{uri})"
         sleep @holdtime
       end
       sleep 1 # avoid looping when no servers are available
@@ -89,8 +89,18 @@ class Client
       end
     end
   end
+
+  def deliver_fax
+    @log.info 'trying to deliver fax...'
+    Mailer.deliver_fax
+  rescue
+    @log.warn $!
+    sleep 1
+    retry
+  end
+
 end
 
 if __FILE__ == $0
-  Client.new.run
+  fork { Client.new.run }
 end

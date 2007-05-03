@@ -18,14 +18,13 @@ ssh_options[:host_key] = 'ssh-dss'
 ssh_options[:paranoid] = false
 
 desc <<-DESC
-Upload nijacker
+Deploy nijacker
 DESC
 task :deploy, :roles => :bot do
   check_config
   check_credentials
-  install_rubygems
   check_out_tha_source
-  reconfigure
+  upload_config
   restart
 end
 
@@ -59,6 +58,8 @@ desc <<-DESC
 Check out tha fscking source!
 DESC
 task :check_out_tha_source, :roles => :bot do
+  set :rel_to_stop, releases.last
+
   source.checkout self
   sudo "chmod 1777 #{release_path(releases.last)}/log"
 end
@@ -67,30 +68,53 @@ desc <<-DESC
 Remove nijacker
 DESC
 task :uninstall, :roles => :bot do
+  stop
   run "rm -rf #{self[:deploy_to]}"
 end
 
 desc <<-DESC
-Change configuration (via DOMAIN and WHOISSERVER passed via the environment)
-Invokes a restart.
+Upload configuration.
 DESC
-task :reconfigure, :roles => :bot do
+task :upload_config, :roles => :bot do
   Dir['config/deploy/*.yml'].each do |conf|
     put File.read(conf), "#{release_path(releases.last)}/#{conf.sub('deploy/', '')}", :mode => 0644
   end
 end
 
 desc <<-DESC
-Restarts nijacker
+Show status on each remote server
 DESC
-task :restart, :roles => :bot do
+task :status, :roles => :bot do
+  run 'ps axuw | grep ^nobody.*nijack'
+end
+
+desc <<-DESC
+Stops nijacker
+DESC
+task :stop, :roles => :bot do
+  rel_to_stop = self[:rel_to_stop] || releases.last
+
   run <<-CMD
-    cd #{release_path(releases.last)};
+    cd #{release_path(rel_to_stop)};
     if [ -r 'log/nijacker.pid' ]; then
       kill -TERM `cat log/nijacker.pid` && sleep 1 || true;
     fi;
   CMD
+end
+
+desc <<-DESC
+Starts nijacker
+DESC
+task :start, :roles => :bot do
   sudo "ruby #{release_path(releases.last)}/server.rb", :as => self[:run_server_as]
+end
+
+desc <<-DESC
+Restarts nijacker
+DESC
+task :restart, :roles => :bot do
+  stop
+  start
 end
 
 # a bug in net-ssh is annoying me, so this is a dirty hack that fixes the 

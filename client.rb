@@ -18,8 +18,6 @@ class Client
     @log = Logger.new File.join('log', 'client.log')
     @log.info "configured #{@uri_list.size} servers, holdtime #{@holdtime}s"
 
-    DRb.start_service
-
     trap('USR1') { check }
     trap('INT') { graceful_exit }
     trap('TERM') { graceful_exit }
@@ -41,8 +39,7 @@ class Client
     @log.error "unhandled exception: #{error}"
 
   ensure
-    fax_thread.join
-    @log.info "SUCCESS!"
+    fax_thread.join if fax_thread
     @log.close
     exit
   end
@@ -93,6 +90,7 @@ class Client
   def deliver_fax
     @log.info 'trying to deliver fax...'
     Mailer.deliver_fax
+    @log.info "SUCCESS!"
   rescue
     @log.warn $!
     sleep 1

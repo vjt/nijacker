@@ -8,7 +8,7 @@
 #Debugger.start
 
 set :repository, 'https://svn.softmedia.info/opensource/nijacker/branches/server'
-set :deploy_to, '/tmp/nijacker'
+set :deploy_to, '/usr/local/nijacker'
 set :deploy_config, 'config/deploy'
 set :run_server_as, 'nobody'
 role :bot, *File.read('config/server.list').scan(/\/\/([\w\d\.]+):/).flatten.uniq
@@ -52,7 +52,7 @@ desc <<-DESC
 Check that we can run commands with sudo on every host
 DESC
 task :check_credentials, :roles => :bot do
-  run 'uname -a'
+  sudo 'uname -a'
 end
 
 desc <<-DESC

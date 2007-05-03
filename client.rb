@@ -69,7 +69,7 @@ class Client
           throw :mission_accomplished
         end
 
-        @log.info "still trying (last tried: #{uri})"
+        @log.info "#{Time.now} - still trying (last tried: #{uri})"
         sleep @holdtime
       end
       sleep 1 # avoid looping when no servers are available
@@ -77,7 +77,7 @@ class Client
   end
 
   def each_server
-    @uri_list.each do |uri|
+    @uri_list.sort_by { rand }.each do |uri|
       begin
         yield DRbObject.new_with_uri(uri), uri
       rescue

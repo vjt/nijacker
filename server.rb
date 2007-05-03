@@ -15,7 +15,6 @@ require config['handler']
 uri = config['listen_on'].freeze
 front_object = eval(config['handler'].camelize).new
 
-Pid = File.join 'log', 'nijacker.pid'
 pid = fork do
   [$stdin, $stdout, $stderr].each { |io| io.close }
 
@@ -26,14 +25,17 @@ pid = fork do
   end
 
   DRb.start_service uri, front_object
+
+  Pid = File.join 'log', 'nijacker.pid'
+  File.open(Pid, 'w+') do |f|
+    f.write "#{$$}\n"
+  end
+
   $SAFE = 1
 
   DRb.thread.join
 end
 
 Process.detach(pid)
-File.open(Pid, 'w+') do |f|
-  f.write "#{pid}\n"
-end
 
 puts "daemonized [#{pid}]"

@@ -5,6 +5,8 @@ require 'drb/drb'
 require 'yaml'
 require 'facets/core/string/camelize'
 
+Dir.chdir(File.dirname(__FILE__))
+
 conf = ARGV[0] || 'config/nijacker.yml'
 config = YAML.load File.read(conf)
 

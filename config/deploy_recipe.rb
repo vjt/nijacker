@@ -22,7 +22,10 @@ DESC
 task :deploy, :roles => :bot do
   check_config
   check_credentials
+
   source.checkout self
+  sudo "chmod 1777 #{release_path(releases.last)}/log"
+
   reconfigure
   restart
 end
@@ -59,9 +62,8 @@ Invokes a restart.
 DESC
 task :reconfigure, :roles => :bot do
   Dir['config/deploy/*.yml'].each do |conf|
-    put File.read(conf), File.join("#{release_path(releases.last)}", 'config', conf)
+    put File.read(conf), "#{release_path(releases.last)}/#{conf.sub('deploy/', '')}", :mode => 0644
   end
-  restart
 end
 
 desc <<-DESC
@@ -71,7 +73,7 @@ task :restart, :roles => :bot do
   run <<-CMD
     cd #{release_path(releases.last)};
     if [ -r 'log/nijacker.pid' ]; then
-      kill -TERM `cat log/nijacker.pid`;
+      kill -TERM `cat log/nijacker.pid` && sleep 1 || true;
     fi;
   CMD
   sudo "ruby #{release_path(releases.last)}/server.rb", :as => self[:run_server_as]

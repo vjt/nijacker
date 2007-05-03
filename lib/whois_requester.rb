@@ -1,4 +1,5 @@
 require 'socket'
+require 'timeout'
 
 class WhoisRequester
   def initialize

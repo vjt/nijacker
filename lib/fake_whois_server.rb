@@ -21,7 +21,7 @@ class WhoisServer
   def answer(domain)
     text = File.read 'config/fake_whois_answer.txt'
     text.sub! '@@DOMAIN@@', domain
-    text.sub! '@@STATUS@@', (rand(10) != 3) ? 'ACTIVE' : 'DELETED'
+    text.sub! '@@STATUS@@', (rand(6) != 3) ? 'ACTIVE' : 'DELETED'
   end
 end
 
